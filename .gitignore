@@ -1,0 +1,8 @@
+venv
+.venv
+.idea
+__pycache__
+/static
+/src/instance
+/compose.yml
+db.sqlite3

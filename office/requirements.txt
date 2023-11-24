@@ -1,0 +1,5 @@
+django
+django-configurations
+requests
+gunicorn
+psycopg2
