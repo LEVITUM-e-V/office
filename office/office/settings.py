@@ -90,7 +90,7 @@ class Common(Configuration):
     # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
     AUTHENTICATION_BACKENDS = (
-        'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
+        'core.oidc.MyOIDCAB',
     )
 
     AUTH_PASSWORD_VALIDATORS = [
