@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
-hello there
+<form action="/door_command/" method="post">
+  {% csrf_token %}
+  <label for="command">Choose a Door command:</label>
+  <select name="command" id="command">
+    <option value="home">Home</option>
+    <option value="open">Open</option>
+    <option value="close">Close</option>
+  </select>
+  <input type="submit" value="Submit">
+</form>
+
+
 {% endblock %}
 

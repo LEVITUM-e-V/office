@@ -33,6 +33,11 @@ class Common(Configuration):
     OIDC_RP_SIGN_ALGO = environ['OIDC_RP_SIGN_ALGO']
     OIDC_OP_JWKS_ENDPOINT = environ['OIDC_OP_JWKS_ENDPOINT']
 
+    MQTT_SERVER = environ['MQTT_SERVER']
+    MQTT_PORT = int(environ['MQTT_PORT'])
+    MQTT_USER = environ['MQTT_USER']
+    MQTT_PASSWORD = environ['MQTT_PASSWORD']
+
     LOGIN_REDIRECT_URL = "/"
     LOGOUT_REDIRECT_URL = "/"
 
