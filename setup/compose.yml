@@ -32,3 +32,13 @@ services:
       timeout: 5s
       interval: 10s
       retries: 10
+  mqtt:
+    image: eclipse-mosquitto:latest
+    restart: unless-stopped
+    ports:
+       - "1883:1883"
+       - "8883:8883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config:ro
+      - ./mosquitto/data:/mosquitto/data:rw
+      - ./mosquitto/logs:/mosquitto/logs:rw
