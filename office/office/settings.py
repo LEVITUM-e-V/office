@@ -147,6 +147,7 @@ class Prod(Common):
     STATIC_ROOT = "/app/static"
     ALLOWED_HOSTS = environ.get('ALLOWED_HOSTS', '').split(',')
     CSRF_TRUSTED_ORIGINS = environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
