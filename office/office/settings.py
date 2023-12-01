@@ -121,7 +121,7 @@ class Dev(Common):
 
 
 class Prod(Common):
-    DEBUG = False
+    DEBUG = str(environ.get('DEBUG', 0)) in ['1', 'True', 'true']
     STATIC_ROOT = "/app/static"
     ALLOWED_HOSTS = [environ.get('ALLOWED_HOST')]
     CSRF_TRUSTED_ORIGINS = [environ.get('CSRF_TRUSTED_ORIGIN')]
