@@ -2,4 +2,6 @@ django
 django-configurations
 requests
 gunicorn
+mozilla-django-oidc
+python-dotenv
 psycopg2

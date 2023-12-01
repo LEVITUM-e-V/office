@@ -13,12 +13,28 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from os import environ
 from configurations import Configuration
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Common(Configuration):
 
     BASE_DIR = Path(__file__).resolve().parent.parent
     SECRET_KEY = environ.get('SECRET_KEY', "django-insecure-bzvb1*88!5o*^e$!lha777m^cnfk8rfcr(o6&+8!)9&g5f!2#$")
+
+    OIDC_RP_CLIENT_ID = environ['OIDC_RP_CLIENT_ID']
+    OIDC_RP_CLIENT_SECRET = environ['OIDC_RP_CLIENT_SECRET']
+
+    OIDC_OP_AUTHORIZATION_ENDPOINT = environ['OIDC_OP_AUTHORIZATION_ENDPOINT']
+    OIDC_OP_TOKEN_ENDPOINT = environ['OIDC_OP_TOKEN_ENDPOINT']
+    OIDC_OP_USER_ENDPOINT = environ['OIDC_OP_USER_ENDPOINT']
+
+    OIDC_RP_SIGN_ALGO = environ['OIDC_RP_SIGN_ALGO']
+    OIDC_OP_JWKS_ENDPOINT = environ['OIDC_OP_JWKS_ENDPOINT']
+
+    LOGIN_REDIRECT_URL = "/"
+    LOGOUT_REDIRECT_URL = "/"
 
     # Application definition
 
@@ -27,6 +43,7 @@ class Common(Configuration):
         "django.contrib.humanize",
         "django.contrib.admin",
         "django.contrib.auth",
+        'mozilla_django_oidc',
         "django.contrib.contenttypes",
         "django.contrib.sessions",
         "django.contrib.messages",
@@ -39,6 +56,7 @@ class Common(Configuration):
         "django.middleware.common.CommonMiddleware",
         "django.middleware.csrf.CsrfViewMiddleware",
         "django.contrib.auth.middleware.AuthenticationMiddleware",
+        'mozilla_django_oidc.middleware.SessionRefresh',
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
     ]
@@ -70,6 +88,10 @@ class Common(Configuration):
 
     # Password validation
     # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
+
+    AUTHENTICATION_BACKENDS = (
+        'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
+    )
 
     AUTH_PASSWORD_VALIDATORS = [
         {
