@@ -7,3 +7,4 @@ __pycache__
 /compose.yml
 db.sqlite3
 /office/.env
+/mosquitto
