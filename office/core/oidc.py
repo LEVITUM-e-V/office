@@ -1,6 +1,6 @@
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
+from django.conf import settings
 from core.models import User
-from josepy.b64 import b64decode
 from josepy.b64 import b64decode
 import requests
 import json
@@ -10,6 +10,12 @@ class MyOIDCAB(OIDCAuthenticationBackend):
     def create_user(self, claims):
         user = super(MyOIDCAB, self).create_user(claims)
 
+        groups = claims.get('groups', [])
+
+        if settings.OIDC_ADMIN_GROUP in groups:
+            user.is_staff = True
+            user.is_superuser = True
+
         user.first_name = claims.get('given_name', '')
         user.last_name = claims.get('family_name', '')
         user.save()
@@ -17,6 +23,10 @@ class MyOIDCAB(OIDCAuthenticationBackend):
         return user
 
     def update_user(self, user, claims):
+        groups = claims.get('groups', [])
+        if settings.OIDC_ADMIN_GROUP in groups:
+            user.is_staff = True
+            user.is_superuser = True
         user.first_name = claims.get('given_name', '')
         user.last_name = claims.get('family_name', '')
         user.save()
@@ -57,6 +67,9 @@ class MyOIDCAB(OIDCAuthenticationBackend):
                 }
 
     def verify_claims(self, claims):
-        print(claims)
         verified = super(MyOIDCAB, self).verify_claims(claims)
+        groups = claims.get('groups', [])
+
+        if settings.OIDC_USER_GROUP not in groups:
+            return False
         return verified

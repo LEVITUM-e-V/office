@@ -33,6 +33,9 @@ class Common(Configuration):
     OIDC_RP_SIGN_ALGO = environ['OIDC_RP_SIGN_ALGO']
     OIDC_OP_JWKS_ENDPOINT = environ['OIDC_OP_JWKS_ENDPOINT']
 
+    OIDC_ADMIN_GROUP = environ['OIDC_ADMIN_GROUP']
+    OIDC_USER_GROUP = environ['OIDC_USER_GROUP']
+
     MQTT_SERVER = environ['MQTT_SERVER']
     MQTT_PORT = int(environ['MQTT_PORT'])
     MQTT_USER = environ['MQTT_USER']
