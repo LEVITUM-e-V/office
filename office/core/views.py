@@ -8,7 +8,7 @@ from django.conf import settings
 def index(request):
     if request.user.is_authenticated:
         return redirect(core)
-    return redirect('login')
+    return redirect('oidc_authentication_init')
 
 
 @login_required
