@@ -5,4 +5,3 @@ gunicorn
 mozilla-django-oidc
 python-dotenv
 psycopg2
-paho-mqtt

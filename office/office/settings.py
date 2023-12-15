@@ -36,10 +36,8 @@ class Common(Configuration):
     OIDC_ADMIN_GROUP = environ['OIDC_ADMIN_GROUP']
     OIDC_USER_GROUP = environ['OIDC_USER_GROUP']
 
-    MQTT_SERVER = environ['MQTT_SERVER']
-    MQTT_PORT = int(environ['MQTT_PORT'])
-    MQTT_USER = environ['MQTT_USER']
-    MQTT_PASSWORD = environ['MQTT_PASSWORD']
+    DOOR_HOST = environ['DOOR_HOST']
+    DOOR_PORT = int(environ['DOOR_PORT'])
 
     LOGIN_REDIRECT_URL = "/"
     LOGOUT_REDIRECT_URL = "/"
