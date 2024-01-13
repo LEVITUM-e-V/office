@@ -88,7 +88,7 @@ class Common(Configuration):
     WSGI_APPLICATION = "office.wsgi.application"
 
     AUTH_USER_MODEL = 'core.User'
-    LOGIN_REDIRECT_URL = '/core/'
+    LOGIN_REDIRECT_URL = '/'
     LOGIN_URL = '/login/'
     LOGOUT_REDIRECT_URL = '/logout/'
 

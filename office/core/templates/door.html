@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<form action="/door/" method="post">
+  {% csrf_token %}
+  <label>Choose a Door command:</label>
+  <button type="submit" name="command" value="status">Status</button>
+  <button type="submit" name="command" value="open">Open</button>
+  <button type="submit" name="command" value="close">Close</button>
+  <button type="submit" name="command" class="secondary" value="home">Home</button>
+</form>
+{% if output %}
+<pre>
+{% for line in output %}
+{{ line }}
+{% endfor %}
+</pre>
+{% endif %}
+
+<section>
+<p>Door Log</p>
+<pre>
+{% for log in logs %}
+{{ log.time | date:'d-m-Y H:i'}}: {{ log.user.first_name }} {{ log.user.last_name }} -> {{ log.command }}
+{% endfor %}
+</pre>
+</section>
+{% endblock %}
+

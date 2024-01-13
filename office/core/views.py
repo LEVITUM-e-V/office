@@ -1,54 +1,60 @@
+import logging
+import socket
 from django.shortcuts import render, redirect
-from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
-import socket
+from django.contrib import messages
+from core.models import DoorLog
+
+logger = logging.getLogger(__name__)
 
 
 def index(request):
     if request.user.is_authenticated:
-        return redirect(core)
+        return redirect(door)
     return redirect('oidc_authentication_init')
 
 
 @login_required
-def core(request):
-    return render(request, 'core.html')
+def door(request):
 
+    context = {
+            'output': [],
+            'logs': DoorLog.objects.order_by("-time")[:20]
+            }
 
-@login_required
-def door_command(request):
+    if request.method == 'POST':
+        command = request.POST.get('command', '')
 
-    if request.method != 'POST':
-        return HttpResponse(400)
+        if command not in ['home', 'open', 'close', 'status']:
+            messages.error(request, "unknown command %s" % command)
+            return render(request, 'door.html', context)
 
-    command = request.POST.get('command', '')
+        door_log = DoorLog(user=request.user, command=command)
+        door_log.save()
+        context.update({'logs': DoorLog.objects.order_by("-time")[:20]})
 
-    if command not in ['home', 'open', 'close', 'status']:
-        return JsonResponse({
-            'status': 'error',
-            'message': f'unknown command {command}'
-            })
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(3)
+            try:
+                s.connect((settings.DOOR_HOST, settings.DOOR_PORT))
+            except (socket.timeout, ConnectionError):
+                logger.exception("door connect timeout")
+                messages.error(request, "could not connect to door")
+                return render(request, 'door.html', context)
+            s.sendall(command.encode() + b"\n")
+            s.settimeout(.5)
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((settings.DOOR_HOST, settings.DOOR_PORT))
-        s.sendall(command.encode() + b"\n")
-        s.settimeout(.5)
+            try:
+                message = bytes()
+                while True:
+                    c = s.recv(1)
+                    if c == b'\n':
+                        context['output'].append(message.decode())
+                        message = bytes()
+                        continue
+                    message += c
+            except socket.timeout:
+                pass
 
-        messages = []
-        try:
-            message = bytes()
-            while True:
-                c = s.recv(1)
-                if c == b'\n':
-                    messages.append(message.decode())
-                    message = bytes()
-                    continue
-                message += c
-        except socket.timeout:
-            pass
-
-    return JsonResponse({
-        'status': 'ok',
-        'messages': messages
-        })
+    return render(request, 'door.html', context)

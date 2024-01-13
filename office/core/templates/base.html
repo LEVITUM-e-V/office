@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css">
     {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css'%}">
     <script src="{% static 'modal.js' %}"></script>
   </head>
   <body>
@@ -21,6 +22,13 @@
     </nav>
 
     <main class="container">
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
     {% block content %}{% endblock content %}
     </main>
 
