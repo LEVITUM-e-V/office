@@ -57,4 +57,7 @@ def door(request):
             except socket.timeout:
                 pass
 
+        door_log.response = ','.join(context['output'])
+        door_log.save()
+
     return render(request, 'door.html', context)

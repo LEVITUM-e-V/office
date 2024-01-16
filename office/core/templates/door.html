@@ -21,7 +21,7 @@
 <p>Door Log</p>
 <pre>
 {% for log in logs %}
-{{ log.time | date:'d-m-Y H:i'}}: {{ log.user.first_name }} {{ log.user.last_name }} -> {{ log.command }}
+{{ log.time | date:'d-m-Y H:i'}}: {{ log.user.first_name }} {{ log.user.last_name }} -> {{ log.command }} = {{ log.response }}
 {% endfor %}
 </pre>
 </section>
