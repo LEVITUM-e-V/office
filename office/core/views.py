@@ -26,7 +26,7 @@ def door(request):
     if request.method == 'POST':
         command = request.POST.get('command', '')
 
-        if command not in ['home', 'open', 'close', 'status']:
+        if command not in ['home', 'open', 'close', 'status', 'reboot']:
             messages.error(request, "unknown command %s" % command)
             return render(request, 'door.html', context)
 
