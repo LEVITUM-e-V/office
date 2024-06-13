@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+{% if status %}
+  {% if status.state == 'play' %}
+  <label>current name: {{ currentsong.name }}</label>
+  <label>current title: {{ currentsong.title }}</label>
+  {% endif %}
+  <label>state: {{ status.state }}</label>
+<br/>
+{% endif %}
+<form action="{% url 'radio' %}" method="post">
+  {% csrf_token %}
+  <button type="submit" name="song_id" value="0" class="secondary">turn off</button>
+  {% for song in playlistinfo %}
+  <button type="submit" name="song_id" value="{{ song.id }}">{{ song.name }}</button>
+  {% endfor %}
+</form>
+{% endblock %}

@@ -39,6 +39,9 @@ class Common(Configuration):
     DOOR_HOST = environ['DOOR_HOST']
     DOOR_PORT = int(environ['DOOR_PORT'])
 
+    MPD_HOST = environ.get('MPD_HOST', 'localhost')
+    MPD_PORT = int(environ.get('MPD_PORT', 6600))
+
     LOGIN_REDIRECT_URL = "/"
     LOGOUT_REDIRECT_URL = "/"
 
@@ -46,6 +49,9 @@ class Common(Configuration):
 
     INSTALLED_APPS = [
         "core.apps.CoreConfig",
+        "door.apps.DoorConfig",
+        "finance.apps.FinanceConfig",
+        "radio.apps.RadioConfig",
         "django.contrib.humanize",
         "django.contrib.admin",
         "django.contrib.auth",

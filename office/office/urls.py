@@ -18,7 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('oidc/', include('mozilla_django_oidc.urls')),
+    path("oidc/", include('mozilla_django_oidc.urls')),
     path('admin/', admin.site.urls),
+    path("door/", include("door.urls")),
+    path("finance/", include("finance.urls")),
+    path("radio/", include("radio.urls")),
     path("", include("core.urls"))
 ]

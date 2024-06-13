@@ -5,3 +5,4 @@ gunicorn
 mozilla-django-oidc
 python-dotenv
 psycopg2
+python-mpd2

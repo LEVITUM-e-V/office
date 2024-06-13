@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block head %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'core/style.css'%}">
+{% endblock head %}
+{% block content %}
+<label>Choose an application:</label>
+<a class="link" href="{% url 'door' %}" role="button">Door</a>
+<a class="link" href="{% url 'radio'%}" role="button">Radio</a>
+<a class="link" href="{% url 'finance' %}" role="button">Finance</a>
+{% endblock %}
+
