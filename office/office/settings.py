@@ -36,11 +36,17 @@ class Common(Configuration):
     OIDC_ADMIN_GROUP = environ['OIDC_ADMIN_GROUP']
     OIDC_USER_GROUP = environ['OIDC_USER_GROUP']
 
+    OIDC_STORE_ACCESS_TOKEN = True
+
     DOOR_HOST = environ['DOOR_HOST']
     DOOR_PORT = int(environ['DOOR_PORT'])
 
     MPD_HOST = environ.get('MPD_HOST', 'localhost')
     MPD_PORT = int(environ.get('MPD_PORT', 6600))
+
+    FINANCE_DRIVE_ID = environ.get('FINANCE_DRIVE_ID')
+    FINANCE_SHEET_ID = environ.get('FINANCE_SHEET_ID')
+    FINANCE_WORKSHEET_ID = environ.get('FINANCE_WORKSHEET_ID')
 
     LOGIN_REDIRECT_URL = "/"
     LOGOUT_REDIRECT_URL = "/"

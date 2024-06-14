@@ -1,5 +1,55 @@
 {% extends "base.html" %}
+
 {% block content %}
-<label>coming soon :)</label>
+<table class="table" id="finance-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Paid By</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+<div id="loading" style="display: none;">Loading...</div>
+{% endblock %}
+
+{% block script %}
+{% csrf_token %}
+<script>
+function load_table() {
+    document.getElementById('loading').style.display = 'block';
+    fetch("{% url 'finance_table_data' %}")
+    .then((response) => response.json())
+    .then((data) => updateTableInfo(data.rows))
+    .finally(() => {
+        document.getElementById('loading').style.display = 'none';
+    });
+}
+
+function updateTableInfo(data) {
+    const tableBody = document.querySelector('#finance-table tbody');
+    tableBody.innerHTML = '';
+    data.forEach((row) => {
+        const tr = document.createElement('tr');
+        // tr.addEventListener('click', () => {
+        //     window.location.href = `/invoice/${row.id}`;
+        // });
+        tr.innerHTML = `
+            <td>${row.id}</td>
+            <td>${row.date}</td>
+            <td>${row.description}</td>
+            <td>${row.paid_by}</td>
+            <td>${row.price}</td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+window.onload = load_table;
+</script>
 {% endblock %}
 
