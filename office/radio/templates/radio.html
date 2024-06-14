@@ -1,18 +1,69 @@
 {% extends "base.html" %}
 {% block content %}
-{% if status %}
-  {% if status.state == 'play' %}
-  <label>current name: {{ currentsong.name }}</label>
-  <label>current title: {{ currentsong.title }}</label>
+<div id="radio-info" aria-live="polite">
+  {% if status %}
+    {% if status.state == 'play' %}
+      <label>current name: {{ currentsong.name }}</label>
+      <label>current title: {{ currentsong.title }}</label>
+    {% endif %}
+    <label>state: {{ status.state }}</label>
+    <br/>
   {% endif %}
-  <label>state: {{ status.state }}</label>
-<br/>
-{% endif %}
-<form action="{% url 'radio' %}" method="post">
-  {% csrf_token %}
-  <button type="submit" name="song_id" value="0" class="secondary">turn off</button>
+</div>
+<div id="playlist">
+  <button onclick="send_command(this, 0)" class="secondary">turn off</button>
   {% for song in playlistinfo %}
-  <button type="submit" name="song_id" value="{{ song.id }}">{{ song.name }}</button>
+  <button onclick="send_command(this, {{ song.id }})">{{ song.name }}</button>
   {% endfor %}
-</form>
+</div>
 {% endblock %}
+
+{% block script %}
+{% csrf_token %}
+<script>
+function send_command(button, song_id) {
+  button.setAttribute('aria-busy', 'true');
+  let data = new FormData();
+  data.append('song_id', song_id);
+  fetch("{% url 'radio' %}", {
+      method: 'POST',
+      body: data,
+      credentials: 'same-origin',
+      headers: {
+        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+      }
+  })
+  .then((response) => response.json())
+  .then((json) => {
+    updateRadioInfo(json.status, json.currentsong);
+  })
+  .finally(() => {
+    button.setAttribute('aria-busy', 'false');
+  });
+}
+
+function updateRadioInfo(status, currentsong) {
+  const radioInfoDiv = document.getElementById('radio-info');
+  radioInfoDiv.innerHTML = '';
+
+  if (status) {
+    if (status.state === 'play' && currentsong) {
+      const nameLabel = document.createElement('label');
+      nameLabel.textContent = 'current name: ' + currentsong.name;
+      radioInfoDiv.appendChild(nameLabel);
+
+      const titleLabel = document.createElement('label');
+      titleLabel.textContent = 'current title: ' + currentsong.title;
+      radioInfoDiv.appendChild(titleLabel);
+    }
+
+    const stateLabel = document.createElement('label');
+    stateLabel.textContent = 'state: ' + status.state;
+    radioInfoDiv.appendChild(stateLabel);
+
+    radioInfoDiv.appendChild(document.createElement('br'));
+  }
+}
+</script>
+{% endblock %}
+

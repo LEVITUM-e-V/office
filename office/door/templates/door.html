@@ -4,30 +4,51 @@
 <link rel="stylesheet" href="{% static 'door/style.css'%}">
 {% endblock head %}
 {% block content %}
-<form action="/door/" method="post">
-  {% csrf_token %}
-  <label>Choose a Door command:</label>
-  <button type="submit" name="command" value="status">Status</button>
-  <button type="submit" name="command" value="open">Open</button>
-  <button type="submit" name="command" value="close">Close</button>
-  <button type="submit" name="command" class="secondary" value="home">Calibrate/Homing</button>
-  <button type="submit" name="command" class="secondary" value="reboot">Reboot</button>
-</form>
-{% if output %}
-<pre>
-{% for line in output %}
-{{ line }}
+<label>Choose a Door command:</label>
+<button onclick="door_command(this, 'status')">Status</button>
+<button onclick="door_command(this, 'open')">Open</button>
+<button onclick="door_command(this, 'close')">Close</button>
+<button class="secondary" onclick="door_command(this, 'home')">Calibrate/Homing</button>
+<button class="secondary" onclick="door_command(this, 'reboot')">Reboot</button>
+<pre id='output'>
+{% for line in output %}{{ line }}
 {% endfor %}
 </pre>
-{% endif %}
 
 <section>
 <p>Door Log</p>
-<pre>
-{% for log in logs %}
-{{ log.time | date:'d-m-Y H:i'}}: {{ log.user.first_name }} {{ log.user.last_name }} -> {{ log.command }} = {{ log.response }}
+<pre id='log'>
+{% for log in logs %}{{ log }}
 {% endfor %}
 </pre>
 </section>
 {% endblock %}
+
+{% block script %}
+{% csrf_token %}
+<script>
+
+function door_command(button, command) {
+  button.setAttribute('aria-busy', 'true');
+  let data = new FormData();
+  data.append('command', command);
+  fetch("{% url 'door' %}", {
+      method: 'POST',
+      body: data,
+      credentials: 'same-origin',
+      headers: {
+        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+      }
+  })
+  .then((response) => response.json())
+  .then((json) => {
+    document.getElementById('log').innerText = json.logs.join('\n');
+    document.getElementById('output').innerText = json.output.join('\n');
+  })
+  .finally(() => {
+    button.setAttribute('aria-busy', 'false');
+  });
+}
+</script>
+{% endblock script %}
 

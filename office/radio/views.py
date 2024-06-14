@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from mpd import MPDClient
 from django.contrib import messages
+from django.http import JsonResponse
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -32,4 +33,7 @@ def index(request):
     except TimeoutError:
         messages.error(request, "timed out connecting to Music Player Daemon")
         logger.exception("timeout mpd")
+
+    if request.method == 'POST':
+        return JsonResponse(context)
     return render(request, 'radio.html', context)
