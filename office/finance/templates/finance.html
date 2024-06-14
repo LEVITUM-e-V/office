@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<a class="link" href="{% url 'finance_insert_entry' %}" role="button">Add</a>
 <table class="table" id="finance-table">
     <thead>
         <tr>
@@ -35,18 +36,19 @@ function updateTableInfo(data) {
     tableBody.innerHTML = '';
     data.forEach((row) => {
         const tr = document.createElement('tr');
-        // tr.addEventListener('click', () => {
-        //     window.location.href = `/invoice/${row.id}`;
-        // });
         tr.innerHTML = `
             <td>${row.id}</td>
             <td>${row.date}</td>
             <td>${row.description}</td>
             <td>${row.paid_by}</td>
-            <td>${row.price}</td>
+            <td>${formatPrice(row.price)}</td>
         `;
         tableBody.appendChild(tr);
     });
+}
+
+function formatPrice(price) {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(price);
 }
 
 window.onload = load_table;

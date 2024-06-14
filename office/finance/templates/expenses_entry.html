@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container">
+      <form method="post">
+          {% csrf_token %}
+          <div>
+              <label for="{{ form.date.id_for_label }}">Date</label>
+              {{ form.date }}
+          </div>
+          <div>
+              <label for="{{ form.description.id_for_label }}">Description</label>
+              {{ form.description }}
+          </div>
+          <div>
+              <label for="{{ form.price.id_for_label }}">Price (€)</label>
+              {{ form.price }}
+              {% if form.price.errors %}
+                  <small class="error">{{ form.price.errors }}</small>
+              {% endif %}
+          </div>
+          <div>
+              <label for="{{ form.paid_by.id_for_label }}">Paid By</label>
+              {{ form.paid_by }}
+          </div>
+          <button type="submit" class="contrast">Submit</button>
+      </form>
+</main>
+{% endblock %}
+
