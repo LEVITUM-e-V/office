@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.http import JsonResponse
+from django.utils import timezone
 from .models import DoorLog
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ def index(request):
             }
 
     def format_log_line(log):
-        formatted_time = log.time.strftime('%d-%m-%Y %H:%M')
+        formatted_time = timezone.localtime(log.time).strftime('%d-%m-%Y %H:%M')
         return f"{formatted_time}: {log.user.first_name} {log.user.last_name} -> {log.command} = {log.response}"
 
     if request.method == 'POST':
