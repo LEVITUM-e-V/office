@@ -36,6 +36,7 @@ function updateTableInfo(data) {
     tableBody.innerHTML = '';
     data.forEach((row) => {
         const tr = document.createElement('tr');
+        tr.setAttribute('data-row-id', row.row_id);
         tr.innerHTML = `
             <td>${row.id}</td>
             <td>${row.date}</td>
@@ -43,8 +44,15 @@ function updateTableInfo(data) {
             <td>${row.paid_by}</td>
             <td>${formatPrice(row.price)}</td>
         `;
+        tr.addEventListener('click', handleClick);
         tableBody.appendChild(tr);
     });
+}
+
+function handleClick(event) {
+    const row = event.currentTarget;
+    const rowId = row.getAttribute('data-row-id');
+  window.location.href = `/finance/table/${rowId}/`
 }
 
 function formatPrice(price) {
@@ -53,5 +61,14 @@ function formatPrice(price) {
 
 window.onload = load_table;
 </script>
+<style>
+    #finance-table tbody tr {
+        cursor: pointer;
+    }
+      #finance-table tbody tr:hover {
+        background-color: #f0f0a0;
+        color: black;
+    }
+</style>
 {% endblock %}
 

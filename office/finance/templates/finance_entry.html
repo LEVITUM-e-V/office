@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container">
+    <div id="loading" class="loading">
+        <p>Loading...</p>
+    </div>
+    <div id="entry-details" style="display:none;">
+        <p><strong>Id:</strong> <span id="entry-id"></span></p>
+        <p><strong>Date:</strong> <span id="entry-date"></span></p>
+        <p><strong>Description:</strong> <span id="entry-description"></span></p>
+        <p><strong>Price:</strong> <span id="entry-price"></span></p>
+        <p><strong>Paid By:</strong> <span id="entry-paid-by"></span></p>
+        <p><strong>Invoice File:</strong> 
+            <a id="invoice-file" href="#" role='button' target="_blank" style="display:none;"></a>
+            <span id="invoice-file-info" style="display:none;"></span>
+            <span id="invoice-not-found" style="display:none;">Invoice Not Found</span>
+        </p>
+        <p><strong>Payment Proof File:</strong> 
+            <a id="payment-proof-file" role='button' href="#" target="_blank" style="display:none;"></a>
+            <span id="payment-proof-file-info" style="display:none;"></span>
+            <span id="payment-proof-not-found" style="display:none;">Payment Proof Not Found</span>
+        </p>
+    </div>
+</main>
+{% endblock %}
+
+{% block script %}
+{% csrf_token %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch("{% url 'finance_entry_data' row_id %}")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('entry-details').style.display = 'block';
+            
+            const entry = data.values;
+            document.getElementById('entry-id').textContent = entry.id;
+            document.getElementById('entry-date').textContent = entry.date;
+            document.getElementById('entry-description').textContent = entry.description;
+            document.getElementById('entry-price').textContent = formatPrice(entry.price);
+            document.getElementById('entry-paid-by').textContent = entry.paid_by;
+
+            const invoiceFileLink = document.getElementById('invoice-file');
+            const invoiceFileInfo = document.getElementById('invoice-file-info');
+            const invoiceNotFound = document.getElementById('invoice-not-found');
+            if (data.invoice && data.invoice.webUrl) {
+                invoiceFileLink.style.display = 'inline';
+                invoiceFileLink.href = data.invoice.webUrl;
+                invoiceFileLink.textContent = 'Download Invoice';
+                invoiceFileInfo.style.display = 'inline';
+                invoiceFileInfo.textContent = `(${data.invoice.size} bytes, last modified: ${new Date(data.invoice.lastModifiedDateTime).toLocaleDateString()})`;
+            } else {
+                invoiceNotFound.style.display = 'inline';
+            }
+
+            const paymentProofFileLink = document.getElementById('payment-proof-file');
+            const paymentProofFileInfo = document.getElementById('payment-proof-file-info');
+            const paymentProofNotFound = document.getElementById('payment-proof-not-found');
+            if (data.payment_proof && data.payment_proof.webUrl) {
+                paymentProofFileLink.style.display = 'inline';
+                paymentProofFileLink.href = data.payment_proof.webUrl;
+                paymentProofFileLink.textContent = 'Download Payment Proof';
+                paymentProofFileInfo.style.display = 'inline';
+                paymentProofFileInfo.textContent = `(${data.payment_proof.size} bytes, last modified: ${new Date(data.payment_proof.lastModifiedDateTime).toLocaleDateString()})`;
+            } else {
+                paymentProofNotFound.style.display = 'inline';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching entry data:', error);
+            document.getElementById('loading').textContent = 'Error loading data';
+        });
+});
+
+function formatPrice(price) {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(price);
+}
+</script>
+{% endblock %}
+

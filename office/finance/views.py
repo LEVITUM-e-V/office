@@ -1,137 +1,11 @@
-import requests
-from datetime import date, timedelta
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from .forms import ExpensesEntryForm
 from django.contrib import messages
-
-
-def get_workspace_used_range(
-        access_token, drive_id: str, file_id: str, worksheet_id: str):
-    resp = requests.get(
-         f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/"
-         f"{file_id}"
-         "/workbook/worksheets/"
-         f"{worksheet_id}/usedRange",
-         headers={
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-                }
-         )
-    resp.raise_for_status()
-    return resp.json()
-
-
-def get_workspace_range(
-        access_token, drive_id: str, file_id: str, worksheet_id: str, address: str):
-    resp = requests.get(
-         f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/"
-         f"{file_id}"
-         "/workbook/worksheets/"
-         f"{worksheet_id}/range(address='{address}')",
-         headers={
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-                }
-         )
-    resp.raise_for_status()
-    return resp.json()
-
-
-def patch_range(access_token,
-                drive_id: str, file_id: str, worksheet_id: str,
-                address: str, row: list
-                ):
-    if address is None:
-        raise ValueError('address cannot be null')
-
-    start, end = address.split(':')
-    if int(start[1:]) != int(end[1:]):
-        raise ValueError('for security reasons only patching of one row is allows. Range is invalid thus')
-
-    resp = requests.patch(
-         f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/"
-         f"{file_id}"
-         "/workbook/worksheets/"
-         f"{worksheet_id}/range(address='{address}')",
-         json={
-             'values': [row]
-             },
-         headers={
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-                }
-         )
-    resp.raise_for_status()
-    return resp.json()
-
-
-def insert_row(
-        access_token,
-        drive_id: str,
-        file_id: str,
-        worksheet_id: str,
-        values: list,
-        start_column='B'
-        ):
-
-    if len(start_column) != 1:
-        raise ValueError('start column must be a one char')
-
-    table_range = get_workspace_used_range(
-            access_token,
-            drive_id, file_id, worksheet_id)
-    assert table_range['rowIndex'] == 0
-
-    next_index = None
-
-    for i in range(
-            min(
-                table_range['rowCount'],
-                len(table_range['values']))
-            ):
-        row = table_range['values'][i]
-        if isinstance(row[0], int) and row[1] == '' and row[2] == '':
-            next_index = i
-            break
-
-    if next_index is None:
-        raise ValueError('could not find where to insert the nex row')
-
-    end_column = chr(ord(start_column) + len(values) - 1)
-    next_address = f'{start_column}{next_index+1}:{end_column}{next_index+1}'
-    next_range = get_workspace_range(
-            access_token,
-            drive_id, file_id, worksheet_id,
-            address=next_address
-            )
-    assert next_range['rowCount'] == 1
-    assert next_range['cellCount'] == len(values)
-    for val_type in next_range['valueTypes'][0]:
-        assert val_type == 'Empty'
-
-    patched_range = patch_range(
-            access_token,
-            drive_id, file_id, worksheet_id,
-            address=next_address,
-            row=values
-            )
-
-    return patched_range
-
-
-def excel_serial_date_to_date(serial_date):
-    base_date = date(1899, 12, 30)
-    days = int(serial_date)
-    return base_date + timedelta(days)
-
-
-def date_to_excel_serial_date(dt):
-    base_date = date(1899, 12, 30)
-    delta = dt - base_date
-    return delta.days
+from .windoof import (
+        Windoof, date_to_excel_serial_date, excel_serial_date_to_date)
 
 
 @login_required
@@ -145,8 +19,9 @@ def finance_insert_entry(request):
                 float(form.cleaned_data['price']),
                 form.cleaned_data['paid_by']
             ]
-            resp = insert_row(
-                request.session['oidc_access_token'],
+            windoof = Windoof()
+            windoof.login(request.session['oidc_access_token'])
+            resp = windoof.insert_row(
                 settings.FINANCE_DRIVE_ID,
                 settings.FINANCE_SHEET_ID,
                 settings.FINANCE_WORKSHEET_ID,
@@ -164,22 +39,26 @@ def finance_insert_entry(request):
 
 @login_required
 def finance_table_data(request):
-    data = get_workspace_used_range(
-            request.session['oidc_access_token'],
+    windoof = Windoof()
+    windoof.login(request.session['oidc_access_token'])
+    data = windoof.get_workspace_used_range(
             settings.FINANCE_DRIVE_ID,
             settings.FINANCE_SHEET_ID,
             settings.FINANCE_WORKSHEET_ID
             ).get('values')
 
+    index_offset = 0
     for i in range(len(data)):
         if data[i][0] == 'ID':
+            index_offset = i+1
             data = data[i+1:]
             break
 
     rows = []
-    for row in reversed(data):
+    for id, row in reversed(list(enumerate(data))):
         if row[1] != '':
             rows.append({
+                'row_id': index_offset+id+1,
                 'id': row[0],
                 'date': excel_serial_date_to_date(row[1]).strftime("%d.%m.%Y"),
                 'description': row[2],
@@ -189,6 +68,74 @@ def finance_table_data(request):
 
     return JsonResponse({
         'rows': rows
+        })
+
+
+def generate_filename(prefix: str, entry_id: int, description, price: float, date, file_ending='pdf'):
+    formatted_price = f"{price:.2f}".replace('.', ',') + "€"
+    formatted_date = date.strftime("%d%m%y")
+    entry_id = str(entry_id).zfill(4)
+    filename = f"{prefix}_{str(entry_id)}_{description}_{formatted_price}_{formatted_date}.{file_ending}"
+    return filename
+
+
+@login_required
+def finance_entry_view(request, row_id: int):
+    return render(request, 'finance_entry.html', context={'row_id': row_id})
+
+
+@login_required
+def finance_entry_data(request, row_id: int):
+    windoof = Windoof()
+    windoof.login(request.session['oidc_access_token'])
+    row = windoof.get_workspace_range(
+            settings.FINANCE_DRIVE_ID,
+            settings.FINANCE_SHEET_ID,
+            settings.FINANCE_WORKSHEET_ID,
+            address=f"A{row_id}:E{row_id}"
+            ).get('values')[0]
+
+    entry_id = int(row[0])
+    date = excel_serial_date_to_date(row[1])
+    description = row[2]
+    price = row[3]
+    paid_by = row[4]
+
+    lut = windoof.get_expenses_LUT(
+            settings.FINANCE_DRIVE_ID,
+            settings.FINANCE_EXPENSES_FOLDER_ID
+            )
+
+    invoices_folder_id = lut['invoices'].get(str(date.month))
+    invoice_file_name = generate_filename('R', entry_id, description, price, date, file_ending='')
+
+    invoice_file = windoof.find_file(
+            settings.FINANCE_DRIVE_ID,
+            invoices_folder_id,
+            invoice_file_name
+            )
+
+    payment_proof_folder_id = lut['payment_proof'].get(str(date.month))
+    payment_proof_file_name = generate_filename('Z', entry_id, description, price, date, file_ending='')
+    payment_proof_file = windoof.find_file(
+            settings.FINANCE_DRIVE_ID,
+            payment_proof_folder_id,
+            payment_proof_file_name
+            )
+
+    print(invoice_file_name)
+    print(payment_proof_file_name)
+
+    return JsonResponse({
+        'values': {
+            'id': entry_id,
+            'date': date.strftime("%d.%m.%Y"),
+            'description': description,
+            'price': price,
+            'paid_by': paid_by
+            },
+        'invoice': invoice_file,
+        'payment_proof': payment_proof_file,
         })
 
 

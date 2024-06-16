@@ -45,6 +45,7 @@ class Common(Configuration):
     MPD_PORT = int(environ.get('MPD_PORT', 6600))
 
     FINANCE_DRIVE_ID = environ.get('FINANCE_DRIVE_ID')
+    FINANCE_EXPENSES_FOLDER_ID = environ.get('FINANCE_EXPENSES_FOLDER_ID')
     FINANCE_SHEET_ID = environ.get('FINANCE_SHEET_ID')
     FINANCE_WORKSHEET_ID = environ.get('FINANCE_WORKSHEET_ID')
 
