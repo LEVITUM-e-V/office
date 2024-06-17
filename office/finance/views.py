@@ -107,24 +107,19 @@ def finance_entry_data(request, row_id: int):
             )
 
     invoices_folder_id = lut['invoices'].get(str(date.month))
-    invoice_file_name = generate_filename('R', entry_id, description, price, date, file_ending='')
 
     invoice_file = windoof.find_file(
             settings.FINANCE_DRIVE_ID,
             invoices_folder_id,
-            invoice_file_name
+            f"R_{str(entry_id).zfill(4)}"
             )
 
     payment_proof_folder_id = lut['payment_proof'].get(str(date.month))
-    payment_proof_file_name = generate_filename('Z', entry_id, description, price, date, file_ending='')
     payment_proof_file = windoof.find_file(
             settings.FINANCE_DRIVE_ID,
             payment_proof_folder_id,
-            payment_proof_file_name
+            f"Z_{str(entry_id).zfill(4)}"
             )
-
-    print(invoice_file_name)
-    print(payment_proof_file_name)
 
     return JsonResponse({
         'values': {
