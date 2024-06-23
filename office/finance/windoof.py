@@ -165,10 +165,24 @@ class Windoof():
 
         return None
 
+    def upload_file(self,
+                    drive_id: str,
+                    folder_id: str,
+                    filename: str,
+                    content
+                    ):
+        resp = self.session.put(
+             f"https://graph.microsoft.com/v1.0/drives/{drive_id}"
+             f"/items/{folder_id}:/{filename}:/content",
+             data=content
+                )
+        resp.raise_for_status()
+        return resp.json()
+
     def _fetch_expenses_folder_LUT(self,
-                                  drive_id: str,
-                                  file_id: str
-                                  ):
+                                   drive_id: str,
+                                   file_id: str
+                                   ):
 
         children = self.fetch_children_recursive(
                 drive_id,

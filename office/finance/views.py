@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
 from django.conf import settings
 from .forms import ExpensesEntryForm
 from django.contrib import messages
@@ -84,7 +85,70 @@ def finance_entry_view(request, row_id: int):
     return render(request, 'finance_entry.html', context={'row_id': row_id})
 
 
+@require_http_methods(["POST"])
 @login_required
+def finance_entry_file_upload(request, row_id, file_type):
+    file = request.FILES.get('file')
+    if not file:
+        return JsonResponse({'error': 'No file provided'}, status=400)
+
+    prefix = {
+        'invoice': 'R',
+        'payment_proof': 'Z'
+    }.get(file_type)
+
+    if not prefix:
+        return JsonResponse({'error': 'Invalid file type'}, status=400)
+
+    windoof = Windoof()
+    windoof.login(request.session['oidc_access_token'])
+    row = windoof.get_workspace_range(
+            settings.FINANCE_DRIVE_ID,
+            settings.FINANCE_SHEET_ID,
+            settings.FINANCE_WORKSHEET_ID,
+            address=f"A{row_id}:E{row_id}"
+            ).get('values')[0]
+
+    entry_id = int(row[0])
+    date = excel_serial_date_to_date(row[1])
+    description = row[2]
+    price = row[3]
+
+    lut = windoof.get_expenses_LUT(
+            settings.FINANCE_DRIVE_ID,
+            settings.FINANCE_EXPENSES_FOLDER_ID
+            )
+
+    folder_id = None
+    if file_type == "invoice":
+        folder_id = lut['invoices'].get(str(date.month))
+    elif file_type == "payment_proof":
+        folder_id = lut['payment_proof'].get(str(date.month))
+
+    if folder_id is None:
+        return JsonResponse({'error': 'Could not find folder where to upload the file to'}, status=500)
+
+    filename = generate_filename(
+            prefix,
+            entry_id,
+            description,
+            price,
+            date)
+
+    resp = windoof.upload_file(
+            settings.FINANCE_DRIVE_ID,
+            folder_id,
+            filename,
+            file.read()
+            )
+
+    return JsonResponse({
+        file_type: resp
+        })
+
+
+@login_required
+@require_http_methods(["GET"])
 def finance_entry_data(request, row_id: int):
     windoof = Windoof()
     windoof.login(request.session['oidc_access_token'])

@@ -11,16 +11,10 @@
         <p><strong>Description:</strong> <span id="entry-description"></span></p>
         <p><strong>Price:</strong> <span id="entry-price"></span></p>
         <p><strong>Paid By:</strong> <span id="entry-paid-by"></span></p>
-        <p><strong>Invoice File:</strong> 
-            <a id="invoice-file" href="#" role='button' target="_blank" style="display:none;"></a>
-            <span id="invoice-file-info" style="display:none;"></span>
-            <span id="invoice-not-found" style="display:none;">Invoice Not Found</span>
-        </p>
-        <p><strong>Payment Proof File:</strong> 
-            <a id="payment-proof-file" role='button' href="#" target="_blank" style="display:none;"></a>
-            <span id="payment-proof-file-info" style="display:none;"></span>
-            <span id="payment-proof-not-found" style="display:none;">Payment Proof Not Found</span>
-        </p>
+        <button id="invoice-file" style="display:none;" onclick="window.open(this.dataset.url, '_blank')">Download Invoice</button>
+        <button id="invoice-file-upload" class="secondary" style="display:none;" onclick="uploadFile('invoice')">Upload Invoice</button>
+        <button id="payment-proof-file" style="display:none;" onclick="window.open(this.dataset.url, '_blank')">Download Payment Proof</button>
+        <button id="payment-proof-file-upload" class="secondary" style="display:none;" onclick="uploadFile('payment_proof')">Upload Payment Proof</button>
     </div>
 </main>
 {% endblock %}
@@ -42,30 +36,22 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('entry-price').textContent = formatPrice(entry.price);
             document.getElementById('entry-paid-by').textContent = entry.paid_by;
 
-            const invoiceFileLink = document.getElementById('invoice-file');
-            const invoiceFileInfo = document.getElementById('invoice-file-info');
-            const invoiceNotFound = document.getElementById('invoice-not-found');
+            const invoiceFileButton = document.getElementById('invoice-file');
+            const invoiceUploadButton = document.getElementById('invoice-file-upload');
             if (data.invoice && data.invoice.webUrl) {
-                invoiceFileLink.style.display = 'inline';
-                invoiceFileLink.href = data.invoice.webUrl;
-                invoiceFileLink.textContent = 'Download Invoice';
-                invoiceFileInfo.style.display = 'inline';
-                invoiceFileInfo.textContent = `(${data.invoice.size} bytes, last modified: ${new Date(data.invoice.lastModifiedDateTime).toLocaleDateString()})`;
+                invoiceFileButton.style.display = 'inline';
+                invoiceFileButton.dataset.url = data.invoice.webUrl;
             } else {
-                invoiceNotFound.style.display = 'inline';
+                invoiceUploadButton.style.display = 'inline';
             }
 
-            const paymentProofFileLink = document.getElementById('payment-proof-file');
-            const paymentProofFileInfo = document.getElementById('payment-proof-file-info');
-            const paymentProofNotFound = document.getElementById('payment-proof-not-found');
+            const paymentProofFileButton = document.getElementById('payment-proof-file');
+            const paymentProofUploadButton = document.getElementById('payment-proof-file-upload');
             if (data.payment_proof && data.payment_proof.webUrl) {
-                paymentProofFileLink.style.display = 'inline';
-                paymentProofFileLink.href = data.payment_proof.webUrl;
-                paymentProofFileLink.textContent = 'Download Payment Proof';
-                paymentProofFileInfo.style.display = 'inline';
-                paymentProofFileInfo.textContent = `(${data.payment_proof.size} bytes, last modified: ${new Date(data.payment_proof.lastModifiedDateTime).toLocaleDateString()})`;
+                paymentProofFileButton.style.display = 'inline';
+                paymentProofFileButton.dataset.url = data.payment_proof.webUrl;
             } else {
-                paymentProofNotFound.style.display = 'inline';
+                paymentProofUploadButton.style.display = 'inline';
             }
         })
         .catch(error => {
@@ -76,6 +62,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function formatPrice(price) {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(price);
+}
+
+function uploadFile(fileType) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = event => {
+        const file = event.target.files[0];
+        if (file) {
+            const url = "{% url 'finance_entry_file_upload' row_id 'FILE_TYPE' %}".replace('FILE_TYPE', fileType);
+            const formData = new FormData();
+            formData.append('file', file);
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(`${fileType} uploaded successfully:`, data);
+                const invoiceFileButton = document.getElementById('invoice-file');
+                const invoiceUploadButton = document.getElementById('invoice-file-upload');
+                if (data.invoice && data.invoice.webUrl) {
+                    invoiceFileButton.style.display = 'inline';
+                    invoiceFileButton.dataset.url = data.invoice.webUrl;
+                    invoiceUploadButton.style.display = 'none';
+                }
+
+                const paymentProofFileButton = document.getElementById('payment-proof-file');
+                const paymentProofUploadButton = document.getElementById('payment-proof-file-upload');
+                if (data.payment_proof && data.payment_proof.webUrl) {
+                    paymentProofFileButton.style.display = 'inline';
+                    paymentProofFileButton.dataset.url = data.payment_proof.webUrl;
+                    paymentProofUploadButton.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error(`Error uploading ${fileType}:`, error);
+            });
+        }
+    };
+    input.click();
 }
 </script>
 {% endblock %}
