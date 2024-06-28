@@ -1,12 +1,13 @@
 from django import forms
 from django.utils import timezone
 
+
 class ExpensesEntryForm(forms.Form):
     date = forms.DateField(
         widget=forms.DateInput(
             attrs={'type': 'date', 'class': 'input'}
         ),
-        initial=timezone.now().date()
+        initial=lambda: timezone.now().date()
     )
     description = forms.CharField(
         max_length=255,
