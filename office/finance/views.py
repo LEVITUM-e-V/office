@@ -170,7 +170,20 @@ def finance_entry_data(request, row_id: int):
             settings.FINANCE_EXPENSES_FOLDER_ID
             )
 
+    if str(date.month) not in lut['invoices']:
+        # cache miss, try to refresh LUT
+        lut = windoof.get_expenses_LUT(
+                settings.FINANCE_DRIVE_ID,
+                settings.FINANCE_EXPENSES_FOLDER_ID,
+                use_cache=False
+                )
+
     invoices_folder_id = lut['invoices'].get(str(date.month))
+
+    if invoices_folder_id is None:
+        return JsonResponse({
+            'error': f'Could not find invoice folder for month {date.month}'
+            }, status=500)
 
     invoice_file = windoof.find_file(
             settings.FINANCE_DRIVE_ID,
