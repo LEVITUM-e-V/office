@@ -10,6 +10,12 @@
     <br/>
   {% endif %}
 </div>
+
+<div id="volume-control">
+  <label for="volume-slider">Volume: </label>
+  <input id="volume-slider" type="range" min="0" max="100" value="50" onchange="setVolume(this.value)">
+</div>
+
 <div id="playlist">
   <button onclick="send_command(this, 0)" class="secondary">turn off</button>
   {% for song in playlistinfo %}
@@ -39,6 +45,23 @@ function send_command(button, song_id) {
   })
   .finally(() => {
     button.setAttribute('aria-busy', 'false');
+  });
+}
+
+function setVolume(volume) {
+  let data = new FormData();
+  data.append('volume', volume);
+  fetch("{% url 'radio' %}", {
+      method: 'POST',
+      body: data,
+      credentials: 'same-origin',
+      headers: {
+        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+      }
+  })
+  .then((response) => response.json())
+  .then((json) => {
+    updateRadioInfo(json.status, json.currentsong);
   });
 }
 
