@@ -13,7 +13,7 @@
 
 <div id="volume-control">
   <label for="volume-slider">Volume: </label>
-  <input id="volume-slider" type="range" min="0" max="100" value="50" onchange="setVolume(this.value)">
+  <input id="volume-slider" type="range" min="0" max="100" value="{{ status.volume }}" onchange="setVolume(this.value)">
 </div>
 
 <div id="playlist">
@@ -85,6 +85,9 @@ function updateRadioInfo(status, currentsong) {
     radioInfoDiv.appendChild(stateLabel);
 
     radioInfoDiv.appendChild(document.createElement('br'));
+
+    const slider = document.getElementById('volume-slider');
+    slider.value = status.volume;
   }
 }
 </script>
