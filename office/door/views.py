@@ -46,7 +46,7 @@ def index(request):
                 context['status'] = 'could not connect to door'
                 return finish_post()
             s.sendall(command.encode() + b"\n")
-            s.settimeout(3)
+            s.settimeout(.5)
 
             try:
                 message = bytes()
